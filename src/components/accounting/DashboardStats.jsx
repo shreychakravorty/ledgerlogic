@@ -1,0 +1,8 @@
+import React from 'react';
+import { Flame, Puzzle, Sparkles, Headphones } from 'lucide-react';
+import { useLearning } from '@/components/accounting/LearningProvider';
+export default function DashboardStats(){
+ const {completed,streak,attempts}=useLearning(); const solved=attempts.filter(a=>a.kind==='support'&&a.score>=70).length;
+ const stats=[{Icon:Flame,value:streak,label:'day streak',note:streak?'Keep the momentum going':'Start your first spark',color:'text-[#d7a261]',bg:'bg-[#fcf3e7]'},{Icon:Puzzle,value:completed.length,label:'concepts mastered',note:'Understanding, not memorizing',color:'text-[#9a84c8]',bg:'bg-[#f1edf9]'},{Icon:Sparkles,value:completed.length*50+solved*75,label:'learning XP',note:'Earned by solving problems',color:'text-[#7caaa1]',bg:'bg-[#edf6f3]'},{Icon:Headphones,value:solved,label:'customer cases solved',note:'Your consultant instincts',color:'text-[#7e9cbe]',bg:'bg-[#eef3f9]'}];
+ return <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{stats.map(({Icon,value,label,note,color,bg})=><div key={label} className="panel px-4 py-4"><div className="flex items-center gap-3"><div className={`rounded-xl p-2.5 ${bg} ${color}`}><Icon size={18}/></div><div><span className="text-[23px] font-bold tracking-tight">{value}</span><p className="text-[10px] text-[#87899a]">{label}</p></div></div><p className="mt-3 text-[9px] text-[#aaaaba]">{note}</p></div>)}</div>;
+}

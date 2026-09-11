@@ -1,0 +1,3 @@
+import React from 'react';
+import { money } from '@/components/accounting/accountingData';
+export default function FinancialTable({title,rows,total,label='Total'}){return <div className="panel overflow-hidden"><h3 className="border-b bg-[#faf9fc] px-5 py-4 text-sm font-bold">{title}</h3><div className="p-5">{rows.map(([name,value])=><div key={name} className="flex justify-between gap-4 border-b border-[#f1eff5] py-3 text-xs"><span className="text-[#8a8298]">{name}</span><span className="font-medium tabular-nums">{money(value)}</span></div>)}{total!==undefined&&<div className="mt-4 flex justify-between text-sm font-bold"><span>{label}</span><span>{money(total)}</span></div>}</div></div>;}

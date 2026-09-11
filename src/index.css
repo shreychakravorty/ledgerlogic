@@ -82,11 +82,20 @@
 
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground font-body;
-  }
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground font-body; background: #f8f9fc; color: #24283e; -webkit-font-smoothing: antialiased; }
+  button, a, input, select { -webkit-tap-highlight-color: transparent; }
+  button, a { transition: background-color .18s, color .18s, transform .18s; }
+  button:focus-visible, a:focus-visible { outline: 3px solid #b2a3ed; outline-offset: 3px; }
 }
+@layer components {
+  .panel { @apply rounded-2xl border border-[#e9eaf1] bg-white; }
+  .primary-btn { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-[#7560d6] px-5 py-3 text-sm font-semibold text-white hover:bg-[#6450c3] disabled:opacity-40 disabled:cursor-not-allowed; }
+  .secondary-btn { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-[#e4e5ed] bg-white px-4 py-2.5 text-sm font-medium hover:bg-[#f5f3ff]; }
+  .eyebrow { @apply text-[10px] font-bold uppercase tracking-[0.16em] text-[#9597a7]; }
+  .page-title { @apply text-3xl font-bold tracking-tight md:text-[34px]; }
+  .muted { @apply text-sm leading-relaxed text-[#85889c]; }
+}
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.page-enter { animation: enter .35s ease-out; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

@@ -1,0 +1,61 @@
+{
+  "name": "BusinessTransaction",
+  "type": "object",
+  "properties": {
+    "event_key": {
+      "type": "string"
+    },
+    "day": {
+      "type": "number"
+    },
+    "description": {
+      "type": "string"
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "debit": {
+            "type": "number"
+          },
+          "credit": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "account",
+          "debit",
+          "credit"
+        ]
+      }
+    },
+    "cash_category": {
+      "type": "string",
+      "enum": [
+        "Operating",
+        "Investing",
+        "Financing"
+      ]
+    },
+    "inventory_units": {
+      "type": "number"
+    },
+    "party": {
+      "type": "string"
+    },
+    "software": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_key",
+    "day",
+    "description",
+    "lines",
+    "cash_category"
+  ]
+}

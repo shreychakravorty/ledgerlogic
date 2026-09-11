@@ -1,0 +1,35 @@
+{
+  "name": "LearningAttempt",
+  "type": "object",
+  "properties": {
+    "activity_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "lesson",
+        "support"
+      ]
+    },
+    "topic": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    },
+    "mistakes": {
+      "type": "number"
+    },
+    "completed_on": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "activity_id",
+    "kind",
+    "topic",
+    "score",
+    "completed_on"
+  ]
+}
