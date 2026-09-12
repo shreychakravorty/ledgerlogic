@@ -1,0 +1,17 @@
+{
+  "name": "LearningProgress",
+  "type": "object",
+  "properties": {
+    "session_key": {
+      "type": "string"
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "session_key",
+    "state"
+  ]
+}

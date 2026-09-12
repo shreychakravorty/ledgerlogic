@@ -23,6 +23,9 @@
     },
     "completed_on": {
       "type": "string"
+    },
+    "attempt_key": {
+      "type": "string"
     }
   },
   "required": [
