@@ -9,9 +9,9 @@ import PracticeCards from '@/components/accounting/PracticeCards';
 import FlowIllustration from '@/components/accounting/FlowIllustration';
 export default function Dashboard(){
  const {user,completed,progress}=useLearning();
- const resume=progress.find(p=>(p.session_key==='daily'||p.session_key.startsWith('lesson:'))&&!p.state.done&&p.state.queue?.length);
+ const resume=progress.find(p=>(p.session_key.startsWith('daily')||p.session_key.startsWith('lesson:'))&&!p.state.done&&p.state.queue?.length);
  const next=resume?getLesson(resume.state.queue[resume.state.index]):lessons.find(l=>!completed.includes(l.id))||lessons[0];
- const nextLink=resume?.session_key==='daily'?'/learn?mode=daily':`/learn?id=${next.id}`;
+ const nextLink=resume?.session_key.startsWith('daily')?'/learn?mode=daily':`/learn?id=${next.id}`;
  const name=user?.full_name?.split(' ')[0];
  return <div className="page-enter space-y-7"><div className="flex flex-wrap items-end justify-between gap-4"><div className="space-y-2"><p className="eyebrow text-[#aaa1bc]">SMALL STEPS. REAL UNDERSTANDING.</p><h1 className="page-title">{completed.length?'Welcome back':'Welcome to your next chapter'}{name?`, ${name}`:''}<span className="text-[#a48cd0]">.</span></h1><p className="muted">Let’s make sense of the numbers behind the business.</p></div><Link to="/path" className="flex items-center gap-2 rounded-full border border-[#e4deef] bg-[#f4f0fa] px-3 py-2 text-[10px] text-[#9e89ba]"><Sprout size={14}/>{completed.length>=6?'LEVEL 2 · PRACTITIONER':'LEVEL 1 · CURIOUS BEGINNER'}</Link></div>
  <DashboardStats/>
