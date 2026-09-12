@@ -1,11 +1,21 @@
 export const money = value => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(value);
-export const accounts = { Cash: 'Asset', 'Cash on hand': 'Asset', 'Accounts receivable': 'Asset', 'Unbilled revenue': 'Asset', 'Allowance for doubtful accounts': 'Asset', Inventory: 'Asset', Supplies: 'Asset', 'Prepaid insurance': 'Asset', 'HST receivable': 'Asset', Equipment: 'Asset', 'Accumulated depreciation': 'Asset', 'Accounts payable': 'Liability', 'Loan payable': 'Liability', 'Shareholder loan': 'Liability', 'Interest payable': 'Liability', 'Wages payable': 'Liability', 'Unearned revenue': 'Liability', 'HST payable': 'Liability', 'Payroll payable': 'Liability', 'Owner capital': 'Equity', 'Owner drawings': 'Equity', 'Opening balance equity': 'Equity', 'Income summary': 'Equity', Revenue: 'Revenue', 'Sales discounts': 'Revenue', 'Cost of goods sold': 'Expense', Rent: 'Expense', Wages: 'Expense', 'Employer payroll contributions': 'Expense', Utilities: 'Expense', 'Bank fees': 'Expense', 'Insurance expense': 'Expense', 'Supplies expense': 'Expense', 'Depreciation expense': 'Expense', 'Interest expense': 'Expense', 'Bad debt expense': 'Expense', 'Loss on disposal': 'Expense' };
+export const accounts = { Cash: 'Asset', 'Cash on hand': 'Asset', 'Accounts receivable': 'Asset', 'Unbilled revenue': 'Asset', 'Allowance for doubtful accounts': 'Asset', Inventory: 'Asset', Supplies: 'Asset', 'Prepaid insurance': 'Asset', 'HST receivable': 'Asset', Equipment: 'Asset', 'Accumulated depreciation': 'Asset', 'Accounts payable': 'Liability', 'Loan payable': 'Liability', 'Shareholder loan': 'Liability', 'Interest payable': 'Liability', 'Wages payable': 'Liability', 'Unearned revenue': 'Liability', 'HST payable': 'Liability', 'Payroll payable': 'Liability', 'Owner capital': 'Equity', 'Owner drawings': 'Equity', 'Opening balance equity': 'Equity', 'Income summary': 'Equity', Revenue: 'Revenue', 'Sales discounts': 'Revenue', 'Cost of goods sold': 'Expense', Rent: 'Expense', Wages: 'Expense', 'Employer payroll contributions': 'Expense', Utilities: 'Expense', 'Bank fees': 'Expense', 'Insurance expense': 'Expense', 'Supplies expense': 'Expense', 'Depreciation expense': 'Expense', 'Interest expense': 'Expense', 'Bad debt expense': 'Expense', 'Inventory shrinkage': 'Expense', 'Inventory write-down': 'Expense', 'Job costs': 'Expense', 'Foreign exchange loss': 'Expense', 'Loss on disposal': 'Expense' };
 export const line = (account, debit = 0, credit = 0, why) => ({ account, debit, credit, why });
+// Contra accounts are grouped with the account they offset (accumulated depreciation sits in
+// assets, sales discounts in revenue) but carry the opposite normal balance. `summarize` needs
+// no special case — their sign already subtracts — but reports must label and place them as
+// deductions rather than as ordinary negative balances.
+export const contraAccounts = new Set(['Accumulated depreciation', 'Allowance for doubtful accounts', 'Sales discounts', 'Owner drawings']);
+export const isContra = account => contraAccounts.has(account);
+// What a contra account is deducted from, for report labelling.
+export const contraOf = { 'Accumulated depreciation': 'Equipment', 'Allowance for doubtful accounts': 'Accounts receivable', 'Sales discounts': 'Revenue', 'Owner drawings': 'Owner capital' };
 export function summarize(transactions) {
   const balances = Object.fromEntries(Object.keys(accounts).map(a => [a, 0]));
   transactions.forEach(t => t.lines.forEach(l => { balances[l.account] = (balances[l.account] || 0) + l.debit - l.credit; }));
   const total = type => Object.entries(balances).filter(([a]) => accounts[a] === type).reduce((sum, [, n]) => sum + n, 0);
-  const revenue = -total('Revenue'), expenses = total('Expense'), profit = revenue - expenses;
+  // `+ 0` normalises the negative zero that -total() yields on an empty or fully closed set,
+  // which would otherwise format as "-$0" in reports.
+  const revenue = -total('Revenue') + 0, expenses = total('Expense') + 0, profit = revenue - expenses;
   return { balances, revenue, expenses, profit, assets: total('Asset'), liabilities: -total('Liability'), equity: -total('Equity') + profit, units: transactions.reduce((s, t) => s + (t.inventory_units || 0), 0) };
 }
 const event = (day, description, lines, cash_category = 'Operating', extra = {}) => ({ event_key: `day-${day}`, day, description, lines, cash_category, ...extra });
@@ -31,6 +41,68 @@ export const businessEvents = [
   event(80, 'Remit the $300 payroll withholding liability.', [line('Payroll payable',300,0,'Maple no longer holds the $300 for the CRA — liability down, debit. Not an expense: the wages cost was recorded on Day 25.'),cashOut(300)]),
   event(90, 'Pay the $130 HST balance to the tax authority.', [line('HST payable',130,0,'The tax Maple collected is handed over — the liability is settled with a debit. Revenue is untouched.'),cashOut(130)])
 ];
+
+// ── Period end ───────────────────────────────────────────────────────────────
+// Day 90 closes Maple's first quarter. Operating transactions record what happened at the bank
+// and with customers; these record what happened to value regardless of the bank. All are dated
+// day 90 and carry their own event_key, because several share a date.
+const PERIOD_END_DAY = 90;
+const periodEnd = (phase, seq, description, lines, extra = {}) =>
+  ({ event_key: `${phase === 'Close' ? 'close' : 'adj'}-${seq}`, day: PERIOD_END_DAY, description, lines, cash_category: 'Operating', phase, ...extra });
+
+export const adjustingEvents = [
+ periodEnd('Year-end', 1, 'Quarter-end: depreciate the $4,000 espresso machine.', [
+  line('Depreciation expense',200,0,'A five-year life on $4,000 is $800 a year, so $200 belongs to this quarter. The machine was used up a little — an expense, debited. No cash moves; that happened on Day 15.'),
+  line('Accumulated depreciation',0,200,'A contra-asset credited so it subtracts from Equipment without erasing the $4,000 cost. Net book value is now $3,800.')],
+  {note:'Maple’s policy is a full period’s charge in the period of purchase.'}),
+ periodEnd('Year-end', 2, 'Quarter-end: accrue interest on the $10,000 loan.', [
+  line('Interest expense',75,0,'The loan was advanced on Day 45. Forty-five days at 6% a year on a 360-day basis is $75 of borrowing cost Maple has already used.'),
+  line('Interest payable',0,75,'The bank has not billed it yet, so Maple owes it — a liability, credited. The $10,000 principal is untouched.')],
+  {note:'$10,000 × 6% × 45/360 = $75.'}),
+ periodEnd('Year-end', 3, 'Quarter-end: accrue three unpaid days of wages.', [
+  line('Wages',450,0,'Staff worked the last three days of the quarter. The work was consumed this period, so the cost belongs to this period — expense, debited.'),
+  line('Wages payable',0,450,'Payday falls next quarter, so Maple owes its staff $450 — a liability, credited.')]),
+ periodEnd('Year-end', 4, 'Quarter-end: provide for doubtful accounts at 4% of receivables.', [
+  line('Bad debt expense',30,0,'Cedar’s remaining $750 is now sixty days old. Four percent of receivables is the expected cost of having sold on credit — an expense in the period of the sale.'),
+  line('Allowance for doubtful accounts',0,30,'A contra-asset credited against receivables. No customer ledger changes — Maple does not yet know which account will fail.')],
+  {note:'$750 × 4% = $30. Net receivables become $720.'}),
+ periodEnd('Year-end', 5, 'Quarter-end count: 15 bags fewer on the shelf than the books show.', [
+  line('Inventory shrinkage',150,0,'Fifteen bags at their $10 cost are gone and were never sold. A cost with nothing to show for it is an expense, debited — not a sale.'),
+  line('Inventory',0,150,'The asset falls to what the count actually found — credit. Inventory was overstated until now.')],
+  {inventory_units:-15, note:'Document and approve a stock loss before posting it.'})
+];
+
+// Closing entries are derived from the balances the transactions above produce, so they can never
+// drift out of step with the data. Revenue and expenses empty into Income summary; the result
+// lands in Owner capital, and the income statement accounts start the next period at zero.
+const balancesAfter = events => { const b = {}; events.forEach(e => e.lines.forEach(l => { b[l.account] = (b[l.account] || 0) + l.debit - l.credit; })); return b; };
+const preCloseBalances = balancesAfter([...businessEvents, ...adjustingEvents]);
+const balanceOf = type => Object.entries(preCloseBalances).filter(([a, n]) => accounts[a] === type && n !== 0).map(([a, n]) => [a, n]);
+const revenueTotal = -balanceOf('Revenue').reduce((s, [, n]) => s + n, 0);
+const expenseRows = balanceOf('Expense');
+const expenseTotal = expenseRows.reduce((s, [, n]) => s + n, 0);
+const periodResult = revenueTotal - expenseTotal;
+
+export const closingEvents = [
+ periodEnd('Close', 1, 'Close revenue into Income summary.', [
+  line('Revenue',revenueTotal,0,`Revenue carries a ${money(revenueTotal)} credit balance built up over the quarter. Debiting it for the same amount empties it, so next quarter starts from zero.`),
+  line('Income summary',0,revenueTotal,'Income summary is a temporary holding account used only at closing. The period’s earnings land here first.')]),
+ periodEnd('Close', 2, 'Close every expense into Income summary.', [
+  line('Income summary',expenseTotal,0,`All ${money(expenseTotal)} of this quarter’s costs are charged against the revenue already sitting here.`),
+  ...expenseRows.map(([account, n]) => line(account,0,n,`${account} holds a ${money(n)} debit balance for the quarter. Crediting it for the same amount empties it — the cost has been counted, and next quarter measures its own.`))]),
+ periodEnd('Close', 3, `Close Income summary into Owner capital: a ${periodResult < 0 ? 'loss' : 'profit'} of ${money(Math.abs(periodResult))}.`, [
+  periodResult < 0
+    ? line('Owner capital',Math.abs(periodResult),0,'A loss reduces the owner’s claim on the business. Equity is a credit-side account, so reducing it takes a debit. Nothing about the cash balance changes.')
+    : line('Income summary',periodResult,0,'Income summary holds the profit as a credit. Debiting it for the same amount brings it to zero.'),
+  periodResult < 0
+    ? line('Income summary',0,Math.abs(periodResult),'Income summary held the loss as a debit. Crediting it for the same amount brings it to zero, its job done.')
+    : line('Owner capital',0,periodResult,'Profit belongs to the owner. Equity grows with a credit — this is how a quarter’s earnings become part of capital.')],
+  {note:'A proprietorship closes to Owner capital; a corporation closes to Retained earnings.'})
+];
+
+export const allEvents = [...businessEvents, ...adjustingEvents, ...closingEvents];
+export const operatingDays = PERIOD_END_DAY;
+export const periodSummary = { revenue: revenueTotal, expenses: expenseTotal, result: periodResult };
 export const curriculum = [
- ['What is accounting actually doing?', 'Build your transaction intuition', 'equipment'], ['Think like an accountant', 'Journals, ledgers & double entry', 'capital'], ['Follow one dollar', 'From a sale to your statements', 'invoice'], ['The three financial statements', 'Profit is not the same as cash', 'collection'], ['The accounting cycle', 'From source documents to closing', 'rent'], ['Trial balance & error types', 'Balanced is not the same as right', 'trialbalance'], ['Accrual vs cash basis', 'Two profits, same month', 'accrualcash'], ['Receivables & payables', 'Track who owes whom', 'collection'], ['Bank reconciliation', 'Make the bank and books agree', 'bank'], ['Inventory', 'Follow the cost, not just the stock', 'inventory'], ['GST/HST & sales tax', 'Separate your revenue from tax', 'tax'], ['Input tax credits & filing', 'You only remit the difference', 'itc'], ['Payroll', 'Gross pay, net pay & liabilities', 'payroll'], ['The employer’s payroll cost', 'CPP, EI & the real cost of a hire', 'payrollemployer'], ['Fix the books', 'Investigate before you correct', 'bank'], ['Adjusting entries', 'Prepaid, accrued, unearned & supplies', 'prepaid'], ['Revenue recognition', 'Unbilled work & deferred income', 'wip'], ['Long-term assets', 'Depreciation, book value & disposal', 'depreciation'], ['Depreciation vs CCA', 'Where the books and the tax return part ways', 'cca'], ['Credit losses & discounts', 'Allowances and early-payment terms', 'baddebt'], ['Inventory costing', 'FIFO vs weighted average', 'fifo'], ['Closing the books', 'Drawings, closing entries & equity', 'closing'], ['Incorporated books', 'Shareholder loans, dividends & retained earnings', 'shareholder'], ['Year-end with an accountant', 'Adjusting entries, cut-off & closing dates', 'yearend'], ['Speak Tally', 'Ledgers, groups, vouchers & bill-wise details', 'tallygroups'], ['Speak QuickBooks', 'Items, bank feeds, classes & matching', 'qboitems'], ['Moving a client to new software', 'Opening balances done properly', 'openingbalance']
+ ['What is accounting actually doing?', 'Build your transaction intuition', 'equipment'], ['Think like an accountant', 'Journals, ledgers & double entry', 'capital'], ['Follow one dollar', 'From a sale to your statements', 'invoice'], ['The three financial statements', 'Profit is not the same as cash', 'collection'], ['The accounting cycle', 'From source documents to closing', 'rent'], ['Trial balance & error types', 'Balanced is not the same as right', 'trialbalance'], ['Accrual vs cash basis', 'Two profits, same month', 'accrualcash'], ['Receivables & payables', 'Track who owes whom', 'collection'], ['Bank reconciliation', 'Make the bank and books agree', 'bank'], ['Inventory', 'Follow the cost, not just the stock', 'inventory'], ['GST/HST & sales tax', 'Separate your revenue from tax', 'tax'], ['Input tax credits & filing', 'You only remit the difference', 'itc'], ['Payroll', 'Gross pay, net pay & liabilities', 'payroll'], ['The employer’s payroll cost', 'CPP, EI & the real cost of a hire', 'payrollemployer'], ['Fix the books', 'Investigate before you correct', 'bank'], ['Adjusting entries', 'Prepaid, accrued, unearned & supplies', 'prepaid'], ['Revenue recognition', 'Unbilled work & deferred income', 'wip'], ['Long-term assets', 'Depreciation, book value & disposal', 'depreciation'], ['Depreciation vs CCA', 'Where the books and the tax return part ways', 'cca'], ['Credit losses & discounts', 'Allowances and early-payment terms', 'baddebt'], ['Inventory costing', 'FIFO vs weighted average', 'fifo'], ['Closing the books', 'Drawings, closing entries & equity', 'closing'], ['Incorporated books', 'Shareholder loans, dividends & retained earnings', 'shareholder'], ['Year-end with an accountant', 'Adjusting entries, cut-off & closing dates', 'yearend'], ['Speak Tally', 'Ledgers, groups, vouchers & bill-wise details', 'tallygroups'], ['Speak QuickBooks', 'Items, bank feeds, classes & matching', 'qboitems'], ['Moving a client to new software', 'Opening balances done properly', 'openingbalance'], ['Job & project costing', 'Which work is actually worth doing', 'jobcost'], ['Multi-currency', 'Foreign exchange gains and losses', 'fx'], ['Inventory write-downs', 'Lower of cost and net realisable value', 'nrv'], ['The payroll year-end', 'T4s, ROEs and reconciling remittances', 't4roe'], ['The HST quick method', 'When the simpler option costs more', 'quickmethod'], ['Working papers', 'What the accountant asks for and why', 'workingpapers']
 ];

@@ -1,5 +1,7 @@
-import { accounts, money } from '@/components/accounting/accountingData';
+import { accounts, money, isContra } from '@/components/accounting/accountingData';
 export const lineSide = l => (l.debit ? 'debit' : 'credit');
+// Explanatory copy for the contra accounts. Which accounts ARE contra lives in accountingData
+// (`contraAccounts`); this map only holds how to explain each one.
 const contra = {
   'Accumulated depreciation': 'Accumulated depreciation is a contra-asset: it lives next to Equipment but carries a credit balance, because its only job is to subtract from the asset’s cost.',
   'Allowance for doubtful accounts': 'The allowance is a contra-asset: it sits against receivables with a credit balance so net receivables show what is realistically collectible.',
@@ -15,7 +17,7 @@ const hooks = {
 };
 export function explainWrongSide(line) {
   const type = accounts[line.account] || 'Asset', correct = lineSide(line), chosen = correct === 'debit' ? 'credit' : 'debit';
-  const normalDebit = ['Asset', 'Expense'].includes(type) && !contra[line.account];
+  const normalDebit = ['Asset', 'Expense'].includes(type) !== isContra(line.account);
   const up = normalDebit ? correct === 'debit' : correct === 'credit';
   const hook = contra[line.account] || hooks[type](line.account, up);
   return `You put ${money(line.debit + line.credit)} on the ${chosen} side. ${hook}${line.why ? ` Here: ${line.why}` : ''}`;

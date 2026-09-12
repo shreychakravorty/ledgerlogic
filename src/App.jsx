@@ -2,23 +2,33 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/components/accounting/AppLayout';
-import Dashboard from '@/pages/Dashboard';
-import Learn from '@/pages/Learn';
-import LearningPath from '@/pages/LearningPath';
-import Business from '@/pages/Business';
-import Support from '@/pages/Support';
-import SoftwareLab from '@/pages/SoftwareLab';
-import Glossary from '@/pages/Glossary';
+
+// Each page is its own chunk. The lesson, glossary and simulation data is a large share of the
+// bundle and none of it is needed to render the sign-in screen or the dashboard.
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Learn = lazy(() => import('@/pages/Learn'));
+const LearningPath = lazy(() => import('@/pages/LearningPath'));
+const Business = lazy(() => import('@/pages/Business'));
+const Support = lazy(() => import('@/pages/Support'));
+const SoftwareLab = lazy(() => import('@/pages/SoftwareLab'));
+const Glossary = lazy(() => import('@/pages/Glossary'));
+
+const PageSpinner = () => (
+  <div className="grid min-h-[60vh] place-items-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800" role="status" aria-label="Loading"></div>
+  </div>
+);
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -45,6 +55,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
+    <Suspense fallback={<PageSpinner />}>
     <Routes>
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
@@ -59,6 +70,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 
@@ -70,6 +82,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <ScrollToTop />
+          <Suspense fallback={<PageSpinner />}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -77,6 +90,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
+          </Suspense>
         </Router>
         <Toaster />
       </QueryClientProvider>

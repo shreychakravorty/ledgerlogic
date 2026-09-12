@@ -47,6 +47,14 @@
     "party": {
       "type": "string"
     },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "Operations",
+        "Year-end",
+        "Close"
+      ]
+    },
     "software": {
       "type": "string"
     }
