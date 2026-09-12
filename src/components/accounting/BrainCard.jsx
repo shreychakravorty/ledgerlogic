@@ -2,8 +2,8 @@ import React from 'react';
 import { Brain, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLearning } from '@/components/accounting/LearningProvider';
-const topics=['Transaction Logic','Financial Statements','AR/AP','Bank Reconciliation','Inventory','GST/HST','Payroll','Troubleshooting'];
-const colors=['#9481d8','#8c9bd5','#7ebaaa','#d8b375','#b28aca','#91b9cf','#92aca0','#cf99ae'];
+const topics=['Transaction Logic','Financial Statements','AR/AP','Bank Reconciliation','Inventory','GST/HST','Payroll','Adjusting Entries','Long-term Assets','Closing & Equity','Troubleshooting'];
+const colors=['#9481d8','#8c9bd5','#7ebaaa','#d8b375','#b28aca','#91b9cf','#92aca0','#c9a37c','#7fa8c9','#a9b78a','#cf99ae'];
 export default function BrainCard(){
  const {topicScore,attempts}=useLearning(); const weak=topics.filter(t=>attempts.some(a=>a.topic===t)&&topicScore(t)<70);
  return <div className="panel p-5">
