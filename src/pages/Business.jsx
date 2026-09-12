@@ -4,7 +4,6 @@ import { useLearning } from '@/components/accounting/LearningProvider';
 import { businessEvents,summarize,money } from '@/components/accounting/accountingData';
 import JournalBuilder from '@/components/accounting/JournalBuilder';
 import BusinessReports from '@/components/accounting/BusinessReports';
-import JournalTable from '@/components/accounting/JournalTable';
 import TransactionFlow from '@/components/accounting/TransactionFlow';
 export default function Business(){
  const {transactions,postTransaction}=useLearning();const [tab,setTab]=useState('run'),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[selected,setSelected]=useState(null);

@@ -1,4 +1,5 @@
 import { advancedLessons } from '@/components/accounting/advancedLessons';
+import { appliedLessons } from '@/components/accounting/appliedLessons';
 export const dr = (account, amount, why) => ({ account, debit: amount, credit: 0, why });
 export const cr = (account, amount, why) => ({ account, debit: 0, credit: amount, why });
 const core = [
@@ -111,5 +112,5 @@ const core = [
   problem:'Payroll liability stays high after remittance: check that the payment hit the liability account.',
   transfer:{question:'The withheld $300 is remitted. What is the debit?',options:['Wages expense','Payroll payable','Revenue'],correct:1,why:'Remittance clears the existing liability. The wages cost was already recorded on payday.'} }
 ];
-export const lessons = [...core, ...advancedLessons];
+export const lessons = [...core, ...advancedLessons, ...appliedLessons];
 export const getLesson = id => lessons.find(l => l.id === id) || lessons[0];

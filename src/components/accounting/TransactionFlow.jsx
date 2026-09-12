@@ -1,7 +1,7 @@
 import React,{useState} from 'react';
 import { ArrowRight } from 'lucide-react';
 import JournalTable from '@/components/accounting/JournalTable';
-import { money, summarize, accounts } from '@/components/accounting/accountingData';
+import { money, summarize } from '@/components/accounting/accountingData';
 const stages=['Source','Journal','Ledger','Trial balance','Adjustments','Income statement','Balance sheet','Cash flow'];
 export default function TransactionFlow({lesson}){
  const [stage,setStage]=useState(0); const totals=summarize([{lines:lesson.journal}]);const b=totals.balances;

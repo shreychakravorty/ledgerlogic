@@ -1,5 +1,4 @@
 import React,{useState} from 'react';
-import { CheckCircle2 } from 'lucide-react';
 export default function TransferStep({lesson,onSolved,onMistake,solved=false}){
  const [choice,setChoice]=useState(solved?lesson.transfer.correct:null),[result,setResult]=useState(solved?true:null);
  const check=()=>{const correct=choice===lesson.transfer.correct;setResult(correct);if(correct)onSolved();else onMistake();};
