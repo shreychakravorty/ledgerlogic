@@ -10,7 +10,12 @@ import { auditing } from '@/components/course/moduleAuditing';
 import { ethics } from '@/components/course/moduleEthics';
 import { analysis } from '@/components/course/moduleAnalysis';
 import { software } from '@/components/course/moduleSoftware';
-export const modules = [fundamentals, doubleEntry, cycle, statements, financial, managerial, gstHst, incomeTax, auditing, ethics, analysis, software];
+import { reporting } from '@/components/course/moduleReporting';
+import { publicSector } from '@/components/course/modulePublicSector';
+import { taxPlanning } from '@/components/course/moduleTaxPlanning';
+import { forensics } from '@/components/course/moduleForensics';
+// Modules marked track:'advanced' are listed under their own heading, after the core program.
+export const modules = [fundamentals, doubleEntry, cycle, statements, financial, managerial, gstHst, incomeTax, auditing, ethics, analysis, software, reporting, publicSector, taxPlanning, forensics];
 export const writtenModules = modules.filter(m => m.lessons);
 export const courseLessons = writtenModules.flatMap(m => m.lessons.map(l => ({ ...l, moduleId: m.id })));
 export const getModule = id => writtenModules.find(m => m.id === id);
