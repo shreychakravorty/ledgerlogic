@@ -11,7 +11,8 @@
         "lesson",
         "support",
         "course_lesson",
-        "course_quiz"
+        "course_quiz",
+        "course_exam"
       ]
     },
     "topic": {
@@ -28,6 +29,10 @@
     },
     "attempt_key": {
       "type": "string"
+    },
+    "details": {
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "required": [

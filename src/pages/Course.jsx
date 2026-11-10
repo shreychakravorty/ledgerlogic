@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowRight, Award, GraduationCap } from 'lucide-react';
 import { modules, writtenModules, courseLessons } from '@/components/course/courseData';
 import useCourseProgress, { PASS_MARK } from '@/components/course/useCourseProgress';
 import ModuleCard from '@/components/course/ModuleCard';
 export default function Course() {
-  const { done, quizScore } = useCourseProgress();
+  const { done, quizScore, exams } = useCourseProgress();
+  const bestExam = Math.max(0, ...exams.map(a => a.score));
   const total = courseLessons.length + writtenModules.length;
   const finished = courseLessons.filter(l => done.has(l.id)).length + writtenModules.filter(m => quizScore(m.id) >= PASS_MARK).length;
   const nextLesson = courseLessons.find(l => !done.has(l.id));
@@ -18,9 +19,14 @@ export default function Course() {
     <p className="muted mt-3">{modules.length} modules, in the order they build on each other. Short lessons, a quick check after each idea, and a quiz to close every module.</p>
     <div className="panel my-7 flex flex-wrap items-center gap-5 p-5">
       <span className="rounded-xl bg-[#eeebf8] p-3 text-[#9e85c5]"><GraduationCap size={24} /></span>
-      <div className="min-w-[180px] flex-1"><p className="text-sm font-semibold">{finished} of {total} lessons and quizzes complete</p><div className="mt-3 h-2 rounded-full bg-[#eeebf3]"><div className="h-full rounded-full bg-[#a18ac9] transition-all" style={{ width: `${finished / total * 100}%` }} /></div><p className="mt-2 text-[11px] text-[#a29aa9]">Modules 1 to {writtenModules.length} are ready now. The rest are mapped out below and open in later steps.</p></div>
+      <div className="min-w-[180px] flex-1"><p className="text-sm font-semibold">{finished} of {total} lessons and quizzes complete</p><div className="mt-3 h-2 rounded-full bg-[#eeebf3]"><div className="h-full rounded-full bg-[#a18ac9] transition-all" style={{ width: `${finished / total * 100}%` }} /></div><p className="mt-2 text-[11px] text-[#a29aa9]">All {modules.length} modules are ready to study, in any order.</p></div>
       {next && <Link to={next.to} className="primary-btn">{next.label}<ArrowRight size={14} /></Link>}
     </div>
     <div className="space-y-3">{modules.map((m, i) => <ModuleCard key={m.id} module={m} number={i + 1} done={done} quizScore={m.lessons ? quizScore(m.id) : 0} open={m.id === currentId} />)}</div>
+    <Link to="/course/exam" className="panel mt-3 flex items-center gap-4 p-5 hover:bg-[#fcfbfe]">
+      <span className="rounded-xl bg-[#eeebf8] p-3 text-[#9e85c5]"><Award size={22} /></span>
+      <div className="flex-1"><h2 className="text-sm font-bold">Final exam</h2><p className="mt-1 text-xs text-[#9a97a8]">{exams.length ? `Best score ${bestExam}% from ${exams.length} ${exams.length === 1 ? 'sitting' : 'sittings'}. Open it for your weak-areas report.` : `Mixed questions across all ${modules.length} modules, with a weak-areas report at the end.`}</p></div>
+      <ArrowRight size={17} className="text-[#ae9dbe]" />
+    </Link>
   </div>;
 }
