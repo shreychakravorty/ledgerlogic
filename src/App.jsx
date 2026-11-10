@@ -23,6 +23,9 @@ const Business = lazy(() => import('@/pages/Business'));
 const Support = lazy(() => import('@/pages/Support'));
 const SoftwareLab = lazy(() => import('@/pages/SoftwareLab'));
 const Glossary = lazy(() => import('@/pages/Glossary'));
+const Course = lazy(() => import('@/pages/Course'));
+const CourseLesson = lazy(() => import('@/pages/CourseLesson'));
+const CourseQuiz = lazy(() => import('@/pages/CourseQuiz'));
 
 const PageSpinner = () => (
   <div className="grid min-h-[60vh] place-items-center">
@@ -66,6 +69,9 @@ const AuthenticatedApp = () => {
           <Route path="/support" element={<Support />} />
           <Route path="/software" element={<SoftwareLab />} />
           <Route path="/glossary" element={<Glossary />} />
+          <Route path="/course" element={<Course />} />
+          <Route path="/course/lesson" element={<CourseLesson />} />
+          <Route path="/course/quiz" element={<CourseQuiz />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
